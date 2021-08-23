@@ -14,6 +14,15 @@ res.redirect('/dashboard')
 }
 )
 
+// for logging out user 
+//route: /aouth/logout
+
+//Passport exposes a logout() function on req (also aliased as logOut() ) that can be called from any route handler which needs to terminate a login session.
+router.get('/logout', (req,res) => {
+    req.logout()
+    res.redirect('/')
+})
+
 
 module.exports = router
 
