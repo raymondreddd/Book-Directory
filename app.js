@@ -11,8 +11,7 @@ const passport=require('passport')
 const path = require('path')
 const session=require('express-session')
 const MongoStore = require('connect-mongo')
-
-
+const methodOverride = require('method-override')
 
 
 //load config
@@ -30,6 +29,18 @@ app.use(express.urlencoded({extended:false}))
 //for api usage (4 future maybe)
 app.use(express.json())
 
+// Method override, placement is very important
+app.use(
+    methodOverride(function (req, res) {
+      if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+        // look in urlencoded POST bodies and delete it
+        let method = req.body._method
+        delete req.body._method
+        return method
+      }
+    })
+  )
+
 //logging reports 
 if (process.env.NODE_ENV==='development'){
     app.use(morgan('dev'))
@@ -37,7 +48,8 @@ if (process.env.NODE_ENV==='development'){
 
 
 //hbs helper
-const {formatDate, stripTags, truncate  } = require('./helpers/hbs')
+const {formatDate, stripTags, truncate, editIcon  } = require('./helpers/hbs')
+
 //handlebars~ejs
 app.engine('.hbs', exphbs({
     helpers :
@@ -45,6 +57,7 @@ app.engine('.hbs', exphbs({
         formatDate,
         stripTags,
         truncate,
+        editIcon,
     },
     defaultLayout: 'main',
     extname: '.hbs'
@@ -66,6 +79,11 @@ app.use(
 app.use(passport.initialize())
 app.use(passport.session())
 
+// Set global var
+app.use(function (req, res, next) {
+    res.locals.user = req.user || null
+    next()
+  })
 
 //routes
 app.use('/', require('./routes/index'))
